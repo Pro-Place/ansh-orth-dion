@@ -392,25 +392,29 @@ class AdaDionV2(Optimizer):
                         momentums = to_local(momentums)
                         Qs = to_local(Qs)
 
+                    update_kwargs = dict(
+                        X=pad_batch(params, batch_size),
+                        G=pad_batch(gradients, batch_size),
+                        M=pad_batch(momentums, batch_size),
+                        Q=pad_batch(Qs, batch_size),
+                        lr=lr,
+                        mu=mu,
+                        weight_decay=weight_decay,
+                        epsilon=epsilon,
+                        param_config=param_config,
+                        replicate_mesh=self._replicate_mesh,
+                        replicate_mesh_grad_sync=self._replicate_mesh_grad_sync,
+                        oversample=oversample,
+                        r_list=r_list,
+                        ada_states=ada_states,
+                        ada_config=self._ada_config if self._adaptive_rank else None,
+                    )
+                    # outer_shard_mesh is only accepted by FSDP update paths
+                    if use_dtensor:
+                        update_kwargs["outer_shard_mesh"] = self._outer_shard_mesh
+
                     yield AsyncTask(
-                        dion_update_func(
-                            X=pad_batch(params, batch_size),
-                            G=pad_batch(gradients, batch_size),
-                            M=pad_batch(momentums, batch_size),
-                            Q=pad_batch(Qs, batch_size),
-                            lr=lr,
-                            mu=mu,
-                            weight_decay=weight_decay,
-                            epsilon=epsilon,
-                            param_config=param_config,
-                            replicate_mesh=self._replicate_mesh,
-                            replicate_mesh_grad_sync=self._replicate_mesh_grad_sync,
-                            oversample=oversample,
-                            r_list=r_list,
-                            ada_states=ada_states,
-                            ada_config=self._ada_config if self._adaptive_rank else None,
-                            outer_shard_mesh=self._outer_shard_mesh,
-                        )
+                        dion_update_func(**update_kwargs)
                     )
 
     def _create_lion_tasks(
