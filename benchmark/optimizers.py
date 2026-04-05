@@ -235,8 +235,10 @@ def _create_dion2(model: nn.Module, config) -> Optimizer:
     """
     from dion import Dion2
 
-    # Force eager mode for Dion2 — its compiled functions are broken
-    torch._dynamo.config.suppress_errors = True
+    # Fully disable torch.compile for Dion2 — its compiled functions
+    # hit InductorError on this PyTorch version
+    torch._dynamo.disable(recursive=True)(lambda: None)()
+    torch._dynamo.config.disable = True
 
     groups = group_params_for_hybrid(model)
     param_groups = []
