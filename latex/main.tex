@@ -25,7 +25,7 @@
 \maketitle
 
 \begin{abstract}
-We benchmark AdaDion V2, an adaptive-rank variant of the Dion optimizer, against AdamW, Muon, Dion, and Dion2 on CIFAR-10 with ResNet-18 and ViT-Small. After identifying and correcting three implementation issues related to parameter coverage, mixed-precision interaction, and learning rate calibration, AdaDion V2 achieves 96.20\% on ResNet-18 (3 seeds), outperforming Dion (95.97\%), Muon (95.87\%), and AdamW (95.29\%). On ViT-Small, the Dion family (Dion 92.38\%, AdaDion 92.25\%, Dion2 92.24\%) outperforms Muon (88.86\%) and AdamW (83.65\%). A 22-run ablation isolates the contribution of each design choice: learning rate is the dominant factor, adaptive rank adds 0.18\% over non-adaptive Dion, and gradient clipping at 1.0 is optimal.
+We benchmark AdaDion V2, an adaptive-rank variant of the Dion optimizer, against AdamW, Muon, Dion, and Dion2 on CIFAR-10 with ResNet-18 and ViT-Small. After identifying and correcting three implementation issues related to parameter coverage, mixed-precision interaction, and learning rate calibration, AdaDion V2 achieves 96.11\% on ResNet-18 (3 seeds), outperforming Dion2 (95.92\%), Dion (95.83\%), Muon (95.73\%), and AdamW (95.38\%). On ViT-Small, the Dion family (Dion 90.92\%, Dion2 90.89\%, AdaDion 89.66\%) outperforms Muon (88.80\%) and AdamW (86.24\%). A 22-run ablation isolates the contribution of each design choice: learning rate is the dominant factor, adaptive rank adds 0.18\% over non-adaptive Dion, and gradient clipping at 1.0 is optimal.
 \end{abstract}
 
 \section{Introduction}
@@ -81,11 +81,11 @@ Table~\ref{tab:resnet} reports best validation accuracy across seeds. AdaDion V2
 \toprule
 Optimizer & Mean Acc (\%) & Std & Val Loss \\
 \midrule
-AdaDion V2 & \textbf{96.20} & 0.12 & \textbf{0.2055} \\
-Dion & 95.97 & 0.05 & 0.2150 \\
-Dion2 & 95.88 & 0.11 & 0.2153 \\
-Muon & 95.87 & 0.11 & 0.2175 \\
-AdamW & 95.29 & 0.05 & 0.2325 \\
+AdaDion V2 & \textbf{96.11} & 0.08 & \textbf{0.2072} \\
+Dion2 & 95.92 & 0.02 & 0.2138 \\
+Dion & 95.83 & 0.10 & 0.2153 \\
+Muon & 95.73 & 0.06 & 0.2175 \\
+AdamW & 95.38 & 0.11 & 0.2325 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -121,11 +121,11 @@ Table~\ref{tab:vit} reports ViT-Small results. The Dion family clusters at 92.2-
 \toprule
 Optimizer & Val Acc (\%) & Val Loss \\
 \midrule
-Dion & \textbf{92.38} & 0.3255 \\
-AdaDion V2 & 92.25 & \textbf{0.3197} \\
-Dion2 & 92.24 & 0.3230 \\
-Muon & 88.86 & 0.3877 \\
-AdamW & 83.65 & 0.5285 \\
+Dion & \textbf{90.92} & \textbf{0.3096} \\
+Dion2 & 90.89 & 0.3117 \\
+AdaDion V2 & 89.66 & 0.3463 \\
+Muon & 88.80 & 0.3877 \\
+AdamW & 86.24 & 0.5285 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -328,7 +328,7 @@ AdaDion V2 passes \texttt{outer\_shard\_mesh} to all update functions, but the D
 
 \section{Conclusion}
 
-AdaDion V2 achieves the best validation accuracy on CIFAR-10 ResNet-18 (96.20\%) while reducing communication volume by 1.8x compared to AdamW and Muon. On 4$\times$A100 DDP, AdaDion V2 runs at 57.6 ms/step, 3.6x faster than Muon (206.3 ms/step) with higher accuracy. The adaptive rank mechanism provides 0.18\% accuracy gain over non-adaptive Dion at 17\% compute overhead. On ViT-Small, the Dion family (92.2--92.4\%) outperforms both Muon (88.9\%) and AdamW (83.7\%).
+AdaDion V2 achieves the best validation accuracy on CIFAR-10 ResNet-18 (96.11\%) while reducing communication volume by 1.8x compared to AdamW and Muon. On 4$\times$A100 DDP, AdaDion V2 runs at 57.6 ms/step, 3.6x faster than Muon (206.3 ms/step) with higher accuracy. The adaptive rank mechanism provides 0.18\% accuracy gain over non-adaptive Dion at 17\% compute overhead. On ViT-Small, the Dion family (89.7--90.9\%) outperforms both Muon (88.8\%) and AdamW (86.2\%).
 
 The rank-performance trade-off shows that rank fraction 0.5 balances accuracy and compression. Lower fractions (0.125--0.25) provide up to 4x communication compression with only 0.1--0.16\% accuracy loss, suitable for bandwidth-limited distributed training.
 
