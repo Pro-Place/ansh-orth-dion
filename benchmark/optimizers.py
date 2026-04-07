@@ -18,12 +18,13 @@ import torch
 import torch.nn as nn
 from torch.optim import AdamW, Optimizer
 
-# Disable torch.compile/dynamo globally. The spectral optimizers use
-# @torch.compile(fullgraph=True) internally which hits InductorError and
-# TorchRuntimeError on PyTorch 2.8+/2.11+ with vision model tensor shapes.
-# Running in eager mode is correct and avoids silent compilation failures.
+# Spectral optimizers use @torch.compile internally. Increase cache limits
+# and suppress errors so compilation failures fall back to eager mode
+# instead of crashing or silently producing wrong results.
 try:
-    torch._dynamo.config.disable = True
+    torch._dynamo.config.recompile_limit = 64
+    torch._dynamo.config.cache_size_limit = 64
+    torch._dynamo.config.suppress_errors = True
 except Exception:
     pass
 
