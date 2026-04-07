@@ -93,7 +93,7 @@ AdamW & 95.38 & 0.11 & 0.2325 \\
 % Full-width figure for the bar charts
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.95\textwidth]{figures/resnet18_comparison_bars.png}
+\includegraphics[width=0.95\textwidth]{figures/resnet18_bars.pdf}
 \caption{ResNet-18 CIFAR-10 validation accuracy (left) and validation loss (right), averaged over 3 seeds. Error bars show standard deviation.}
 \label{fig:resnet_bars}
 \end{figure*}
@@ -101,7 +101,7 @@ AdamW & 95.38 & 0.11 & 0.2325 \\
 % Full-width figure for training curves
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.95\textwidth]{figures/resnet18_training_curves.png}
+\includegraphics[width=0.95\textwidth]{figures/training_curves.pdf}
 \caption{ResNet-18 training curves over 100 epochs (mean over 3 seeds, shaded region shows standard deviation). Left: training loss. Center: validation loss. Right: validation accuracy.}
 \label{fig:resnet_curves}
 \end{figure*}
@@ -133,7 +133,7 @@ AdamW & 86.24 & 0.5285 \\
 % Full-width figure for ViT bars
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.95\textwidth]{figures/vit_small_comparison_bars.png}
+\includegraphics[width=0.95\textwidth]{figures/vit_bars.pdf}
 \caption{ViT-Small CIFAR-10 validation accuracy (left) and validation loss (right).}
 \label{fig:vit_bars}
 \end{figure*}
@@ -147,12 +147,12 @@ Figure~\ref{fig:perf} shows convergence speed and training cost. AdaDion V2 and 
 \centering
 \begin{minipage}[t]{0.48\textwidth}
 \centering
-\includegraphics[width=\textwidth]{figures/convergence_speed.png}
+\includegraphics[width=\textwidth]{figures/convergence.pdf}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.48\textwidth}
 \centering
-\includegraphics[width=\textwidth]{figures/throughput_memory.png}
+\includegraphics[width=\textwidth]{figures/throughput.pdf}
 \end{minipage}
 \caption{Left: epochs required to reach target validation accuracy on ResNet-18. Right: total training time and average throughput (ResNet-18, seed 42).}
 \label{fig:perf}
@@ -211,23 +211,14 @@ Axis & Setting & Val Acc (\%) \\
 
 \textbf{Rank fraction} of 0.5 performs best. Using full rank (rf=1.0) removes the low-rank compression and degrades to 95.99\%.
 
-Figure~\ref{fig:ablation} shows all 22 ablation runs. Figure~\ref{fig:vit_lr} shows the AdaDion V2 learning rate sweep on ViT-Small, where lr=0.005 is optimal.
+Figure~\ref{fig:vit_lr} shows the AdaDion V2 learning rate sweep on ViT-Small, where lr=0.005 is optimal.
 
-% Full-width ablation figure
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\includegraphics[width=0.95\textwidth]{figures/ablation_summary.png}
-\caption{All 22 ablation configurations for AdaDion V2 on ResNet-18. The dashed line marks the best result (96.30\%). Colored bars on the left are baselines (AdamW, Muon, Dion).}
-\label{fig:ablation}
-\end{figure*}
-
-% Full-width ViT LR sweep
-\begin{figure*}[t]
-\centering
-\includegraphics[width=0.85\textwidth]{figures/vit_adadion_lr_sweep.png}
-\caption{AdaDion V2 learning rate sweep on ViT-Small. Optimal learning rate is 0.005, yielding 92.25\% validation accuracy.}
+\includegraphics[width=\columnwidth]{figures/vit_lr_sweep.pdf}
+\caption{AdaDion V2 learning rate sweep on ViT-Small.}
 \label{fig:vit_lr}
-\end{figure*}
+\end{figure}
 
 \section{Communication Overhead}
 
@@ -269,7 +260,7 @@ The Dion family achieves a favorable compute-communication balance: the low-rank
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.95\textwidth]{figures/communication_overhead.png}
+\includegraphics[width=0.95\textwidth]{figures/communication.pdf}
 \caption{Estimated communication cost per step for each optimizer under DDP ring all-reduce. Values above bars show MB transferred and compression ratio.}
 \label{fig:comm}
 \end{figure*}
@@ -284,14 +275,14 @@ Figure~\ref{fig:compression} compares the communication compression ratio across
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/rank_performance_tradeoff.png}
+\includegraphics[width=0.85\textwidth]{figures/rank_tradeoff.pdf}
 \caption{Rank fraction vs validation accuracy (left axis) and communication compression ratio for a $512 \times 4608$ layer (right axis). The optimal rank fraction (0.5) balances accuracy and compression.}
 \label{fig:rank_tradeoff}
 \end{figure*}
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/compression_ratio.png}
+\includegraphics[width=0.85\textwidth]{figures/compression_ratio.pdf}
 \caption{Communication compression ratio relative to full gradient all-reduce on both architectures.}
 \label{fig:compression}
 \end{figure*}
