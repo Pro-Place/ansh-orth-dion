@@ -351,7 +351,14 @@ AdaDion V2 achieves the highest accuracy at every width. The advantage over Dion
 
 As width increases, the weight matrices grow (e.g., $640 \times 640$ at width 10 vs $128 \times 128$ at width 2), giving the rank adaptation mechanism a wider operating range. At the same time, the gap between AdaDion and AdamW narrows from 1.46\% to 0.40\%, consistent with the expectation that larger models are easier to optimize and baseline performance improves.
 
-Muon is 3.3x slower than AdamW on WRN-28-10 (20413s vs 6254s) while achieving 0.15\% lower accuracy, making it impractical at this scale without distributed communication savings to offset the compute cost.
+Muon is 3.3x slower than AdamW on WRN-28-10 (20413s vs 6254s) while achieving 0.15\% lower accuracy, making it impractical at this scale without distributed communication savings to offset the compute cost. Figure~\ref{fig:wrn} shows the accuracy trend across widths.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/wrn_scaling.pdf}
+\caption{Validation accuracy vs model width on WideResNet-28.}
+\label{fig:wrn}
+\end{figure}
 
 \section{Implementation Notes}
 \label{sec:amp}
