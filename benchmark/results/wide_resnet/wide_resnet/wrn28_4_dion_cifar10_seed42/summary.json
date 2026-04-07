@@ -1,0 +1,16 @@
+{
+  "run_name": "wrn28_4_dion_cifar10_seed42",
+  "model": "wrn-28-4",
+  "optimizer": "dion",
+  "dataset": "cifar10",
+  "seed": 42,
+  "total_params": 5849050,
+  "matrix_params": 5841840,
+  "best_val_acc": 96.03,
+  "final_val_loss": 0.2088791579723358,
+  "final_val_acc": 96.02000000000001,
+  "total_time_sec": 2750.682575825602,
+  "avg_epoch_time_sec": 27.506825758256017,
+  "peak_mem_mb": 1052.970496,
+  "epochs": 100
+}

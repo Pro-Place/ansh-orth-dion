@@ -1,0 +1,16 @@
+{
+  "run_name": "wrn28_10_muon_cifar10_seed42",
+  "model": "wrn-28-10",
+  "optimizer": "muon",
+  "dataset": "cifar10",
+  "seed": 42,
+  "total_params": 36479194,
+  "matrix_params": 36461232,
+  "best_val_acc": 96.36,
+  "final_val_loss": 0.20548005590438842,
+  "final_val_acc": 96.32,
+  "total_time_sec": 20412.5109369345,
+  "avg_epoch_time_sec": 204.125109369345,
+  "peak_mem_mb": 2758.439424,
+  "epochs": 100
+}

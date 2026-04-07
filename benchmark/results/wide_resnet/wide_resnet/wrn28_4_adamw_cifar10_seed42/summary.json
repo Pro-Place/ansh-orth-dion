@@ -1,0 +1,16 @@
+{
+  "run_name": "wrn28_4_adamw_cifar10_seed42",
+  "model": "wrn-28-4",
+  "optimizer": "adamw",
+  "dataset": "cifar10",
+  "seed": 42,
+  "total_params": 5849050,
+  "matrix_params": 5841840,
+  "best_val_acc": 95.58,
+  "final_val_loss": 0.2262257137775421,
+  "final_val_acc": 95.55,
+  "total_time_sec": 1729.4215578101575,
+  "avg_epoch_time_sec": 17.294215578101575,
+  "peak_mem_mb": 1075.890176,
+  "epochs": 100
+}
