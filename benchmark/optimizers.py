@@ -18,11 +18,12 @@ import torch
 import torch.nn as nn
 from torch.optim import AdamW, Optimizer
 
-# Spectral optimizers use @torch.compile internally. Increase cache limits
-# for varied tensor shapes in vision models.
+# Disable torch.compile/dynamo globally. The spectral optimizers use
+# @torch.compile(fullgraph=True) internally which hits InductorError and
+# TorchRuntimeError on PyTorch 2.8+/2.11+ with vision model tensor shapes.
+# Running in eager mode is correct and avoids silent compilation failures.
 try:
-    torch._dynamo.config.recompile_limit = 64
-    torch._dynamo.config.cache_size_limit = 64
+    torch._dynamo.config.disable = True
 except Exception:
     pass
 
@@ -234,11 +235,6 @@ def _create_dion2(model: nn.Module, config) -> Optimizer:
     PyTorch version. Force eager mode to bypass it.
     """
     from dion import Dion2
-
-    # Fully disable torch.compile for Dion2 — its compiled functions
-    # hit InductorError on this PyTorch version
-    torch._dynamo.disable(recursive=True)(lambda: None)()
-    torch._dynamo.config.disable = True
 
     groups = group_params_for_hybrid(model)
     param_groups = []
