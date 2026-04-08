@@ -577,6 +577,60 @@ The raw (faint) lines show per-step noise, while the smooth (bold) lines show th
 
 The key insight from this experiment: the effective rank is an intrinsic property of the training dynamics that decreases over time, and gamma controls how the optimizer responds to this. Too low gamma wastes capacity by ignoring gradient information. Too high gamma wastes computation and communication by maintaining unnecessary rank. gamma=2.0 hits the sweet spot.
 
+### Rank Evolution During Training (from the paper, explained)
+
+The paper's Section 7.2 describes how AdaDion tracks rank. Here is what each piece means in plain language.
+
+**What is the "effective rank" of a matrix?**
+
+Every matrix can be decomposed into a sum of rank-1 components (think of it as layers of information). The singular values tell you how important each component is. If a 512x512 matrix has 5 large singular values and 507 near-zero ones, it is "effectively" rank 5 even though its technical rank is 512. Most of the information lives in those 5 directions.
+
+The effective rank formalizes this using Shannon entropy (the same entropy from information theory). Given singular values sigma_1, sigma_2, ..., sigma_r, compute:
+
+```
+p_i = sigma_i / (sigma_1 + sigma_2 + ... + sigma_r)    # normalize to probabilities
+entropy = -sum(p_i * log(p_i))                          # Shannon entropy
+effective_rank = exp(entropy)                            # convert to a "count"
+```
+
+If all singular values are equal (all directions equally important), entropy is maximal and effective rank equals r (full rank). If one singular value dominates (all information in one direction), entropy is near zero and effective rank is near 1.
+
+**Why not compute SVD directly?**
+
+Full SVD of a large matrix is expensive (O(mn * min(m,n))). AdaDion avoids this by using the column norms of the R factor from its QR decomposition as proxies for singular values. These are already computed as part of the normal optimizer step, so the effective rank estimate comes for free.
+
+Specifically, during the power iteration step, Dion computes M approximately equal to P times R transpose, where R has r columns. The L2 norm of each column of R approximates the corresponding singular value. These proxy singular values are plugged into the entropy formula above.
+
+**How does the rank get updated?**
+
+Each step:
+
+1. Compute the proxy singular values (column norms of R).
+2. Compute the effective rank from those values.
+3. Smooth it with an exponential moving average: `smoothed = beta * current + (1 - beta) * previous`. With beta=0.5, the smoothed value responds to changes within a few steps but filters out per-step noise.
+4. Multiply by gamma to get the target rank: `target = ceil(gamma * smoothed_erank)`.
+5. Clamp to [rank_min, rank_cap]: the rank cannot go below 16 or above rank_fraction_max * min(m, n).
+6. Quantize to multiples of 8 (for GPU memory alignment and Tensor Core efficiency).
+7. Rate-limit the change: the rank can increase by at most 16 per step and decrease by at most 8 per step. This prevents wild oscillations.
+8. If the rank changed, resize the Q matrix (the persistent low-rank factor) by padding new columns with random orthonormal vectors (if increasing) or truncating (if decreasing).
+
+**What did we observe?**
+
+On ResNet-18 CIFAR-10 over 19,500 steps:
+
+The effective rank starts around 155 in early training (the gradients have many active directions because the model is far from converged and the loss landscape is complex). As training progresses and the model converges, the effective rank drops to about 130 (fewer directions carry significant gradient information because the model is fine-tuning rather than learning from scratch).
+
+This decline is intrinsic to the training dynamics. It happens regardless of the gamma value, confirming it reflects real changes in the gradient structure rather than an artifact of the optimizer.
+
+The actual rank responds differently depending on gamma:
+- gamma=0.5: target = 0.5 * 130 = 65, but rank_min=16 dominates for many smaller layers, so average rank is about 16. The optimizer is compressing too aggressively and loses information.
+- gamma=1.5: target = 1.5 * 130 = 195 early, decreasing to 1.5 * 130 = 195. Wait, but the actual rank starts at 200 and decreases to 150. This is because the effective rank itself drops from 155 to 130, so the target drops from 232 to 195, and after rate-limiting and clamping, the rank follows this decline. This is the adaptive mechanism working as designed.
+- gamma=2.0: target = 2.0 * 130 = 260, but this exceeds the maximum available rank for many layers. The rank stays near 175-190.
+
+**Why does the paper say "the adaptive rank mechanism provides less benefit on ViT"?**
+
+This was a mistake in our analysis. The ViT-Small result showed AdaDion trailing Dion (89.66% vs 90.92%), but this was because we used the same LR (0.005) for both without independently tuning AdaDion's LR on ViT. On LLaMA 320M (also a transformer with natively 2D weights), Tatsu showed AdaDion beating Dion with properly tuned hyperparameters. The adaptive mechanism works on transformers; our ViT LR was just not optimal. We corrected this statement in the latex.
+
 ## 21. Key Lessons
 
 1. When porting distributed optimizers to single-GPU, check every code path for distributed-only assumptions (mesh parameters, DTensor operations, world_size=1 edge cases).

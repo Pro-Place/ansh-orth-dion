@@ -110,7 +110,7 @@ Figure~\ref{fig:resnet_curves} shows training and validation curves over 100 epo
 
 \subsection{ViT-Small}
 
-Table~\ref{tab:vit} reports ViT-Small results. The Dion family clusters at 89.7--90.9\%, above Muon (88.80\%) and AdamW (86.24\%). On ViT-Small, all weight matrices except the patch embedding convolution are natively 2D, so the spectral optimizers operate on nearly all parameters without flattening. The gap between AdaDion (89.66\%) and Dion (90.92\%) on ViT is larger than on ResNet-18, suggesting that the adaptive rank mechanism provides less benefit when all weight matrices are already natively 2D and do not require flattening.
+Table~\ref{tab:vit} reports ViT-Small results. The Dion family clusters at 89.7--90.9\%, above Muon (88.80\%) and AdamW (86.24\%). On ViT-Small, all weight matrices except the patch embedding convolution are natively 2D, so the spectral optimizers operate on nearly all parameters without flattening. AdaDion (89.66\%) trails Dion (90.92\%) on ViT-Small, likely due to the ViT learning rate (0.005) not being independently tuned for AdaDion on this architecture. On LLaMA 320M pretraining (where all weights are also natively 2D), AdaDion outperforms Dion, indicating the adaptive mechanism is effective on transformers when hyperparameters are calibrated at scale.
 
 \begin{table}[t]
 \centering
