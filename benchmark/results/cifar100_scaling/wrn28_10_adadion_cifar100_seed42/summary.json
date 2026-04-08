@@ -1,0 +1,16 @@
+{
+  "run_name": "wrn28_10_adadion_cifar100_seed42",
+  "model": "wrn-28-10",
+  "optimizer": "adadion",
+  "dataset": "cifar100",
+  "seed": 42,
+  "total_params": 36536884,
+  "matrix_params": 36518832,
+  "best_val_acc": 83.12,
+  "final_val_loss": 0.7611761903762817,
+  "final_val_acc": 83.08,
+  "total_time_sec": 9088.889824362472,
+  "avg_epoch_time_sec": 90.88889824362472,
+  "peak_mem_mb": 2777.65632,
+  "epochs": 100
+}
