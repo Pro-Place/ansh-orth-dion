@@ -451,7 +451,133 @@ INVESTIGATION_FINDINGS.md   # Bug investigation documentation
 FULL_PROJECT_LOG.md         # This file
 ```
 
-## 20. Key Lessons
+## 20. Concepts and Experiment Details Explained
+
+This section explains every concept, dataset, model, and experiment in plain language.
+
+### Datasets
+
+**CIFAR-10**: 60,000 tiny color images (32x32 pixels), split into 50,000 for training and 10,000 for testing. Each image belongs to one of 10 classes (airplane, car, bird, cat, deer, dog, frog, horse, ship, truck). This is one of the most common benchmarks in deep learning. A good ResNet-18 reaches about 95-96% accuracy.
+
+**CIFAR-100**: Same 60,000 images at 32x32, but with 100 classes instead of 10. Each class has only 500 training images (vs 5,000 in CIFAR-10), making it a harder task. A good ResNet-18 reaches about 78-82%. We used CIFAR-100 because Hiroko wanted to see if AdaDion's advantage holds on a harder problem. It does, and the margins are actually larger.
+
+### Model Architectures
+
+**ResNet-18**: A convolutional neural network with 18 layers and skip connections. 11.2M parameters. Most of its weights are in 4D convolutional filters (shape: output_channels x input_channels x kernel_height x kernel_width). The CIFAR-10 version uses a 3x3 stem instead of the 7x7 stem used for ImageNet, because CIFAR images are only 32x32 pixels.
+
+**ViT-Small (Vision Transformer)**: A transformer applied to images. It splits the 32x32 image into 4x4 patches (64 patches total), embeds each patch into a 384-dimensional vector, then processes them through 6 transformer layers with 6 attention heads. 10.7M parameters. Unlike ResNet, nearly all weights are 2D linear layers (attention QKV projections, MLP layers), so spectral optimizers can operate on them directly without flattening.
+
+**WideResNet-28-k**: A variant of ResNet where the width (number of channels) is multiplied by a factor k. WRN-28-2 has 1.5M params, WRN-28-4 has 5.9M, WRN-28-10 has 36.5M. We used this to test how optimizers behave as the model gets bigger. Wider models have larger weight matrices (e.g., 640x640 at width=10 vs 128x128 at width=2), giving the spectral optimizer more room to work with.
+
+### Ablation Concepts
+
+**Adaptive rank ON vs OFF (+0.18%)**
+
+The 0.18% gap comes from comparing AdaDion with adaptive_rank=True (96.30%) vs adaptive_rank=False (96.12%) at the same learning rate (0.01) on ResNet-18 CIFAR-10.
+
+With adaptive_rank=False, AdaDion behaves identically to base Dion: it uses a fixed rank throughout training. With adaptive_rank=True, the optimizer monitors the effective rank of each layer's gradient momentum and adjusts the rank up or down accordingly.
+
+0.18% may seem small, but consider: (a) this is on ResNet-18 where the fc layer is tiny (10x512) and most conv layers are flattened to moderate sizes, leaving limited room for rank adaptation; (b) on CIFAR-100 WRN-28-10, the gap between AdaDion and Dion is 1.38%, which is substantial; (c) the adaptive mechanism adds only 17% compute overhead. The benefit increases with harder tasks and larger matrices.
+
+**Gradient clipping**
+
+During training, the optimizer computes gradients (how much to adjust each weight). Sometimes gradients become very large (called "gradient explosion"), which causes unstable training. Gradient clipping limits the total gradient magnitude to a maximum value.
+
+We tested three settings:
+- clip=1.0: limit gradient norm to 1.0 (best, 96.30%)
+- clip=5.0: limit to 5.0 (96.11%)
+- no clip: no limit (96.08%)
+
+Clipping at 1.0 works best because the spectral optimizer produces update directions on the Stiefel manifold (orthogonal matrices). Large gradients push the update away from this manifold. Tight clipping keeps the optimization trajectory closer to the manifold geometry.
+
+**Rank fraction**
+
+When Dion/AdaDion approximates a weight matrix W (size m x n), it uses a low-rank factorization: W is approximated as P times Q transpose, where P has r columns and Q has r columns. The rank fraction determines r as a fraction of the smaller dimension: r = rank_fraction x min(m, n).
+
+For example, a 512x4608 matrix (a flattened conv layer) with rank_fraction=0.25 uses r = 0.25 x 512 = 128. This means the optimizer works with a 128-dimensional approximation instead of the full 512 dimensions. Lower rank fraction means more compression (less communication in distributed training) but potentially worse approximation quality.
+
+We tested rank_fraction in {0.125, 0.25, 0.5, 0.75, 1.0}:
+- 0.125: 4x compression, 96.19% accuracy
+- 0.5: 1.8x compression, 96.30% accuracy (best)
+- 1.0: no compression, 95.99% accuracy
+
+The finding that rf=1.0 (full rank, no compression) is worse than rf=0.5 is interesting: it suggests the low-rank constraint acts as implicit regularization, preventing the optimizer from overfitting to gradient noise.
+
+**Scalar LR decoupling**
+
+In the hybrid optimizer setup, matrix parameters (conv/linear weights) use the spectral optimizer with one learning rate, while scalar parameters (BatchNorm weights, biases) use AdamW with potentially a different learning rate.
+
+"Scalar LR decoupling" tests whether using a different learning rate for the AdamW part helps. We tried:
+- scalar_lr=0.01 (same as matrix lr): 96.30% (best)
+- scalar_lr=0.003: 96.06%
+- scalar_lr=0.001: 95.99%
+
+Matching the scalar LR to the matrix LR works best. Using a lower scalar LR undertrains the norm/bias parameters.
+
+### Wide ResNet Scaling Experiment
+
+The question: does AdaDion's advantage hold as models get bigger, or does it only work at one specific scale?
+
+We trained WideResNet-28 at three widths on both CIFAR-10 and CIFAR-100. Each width multiplies the number of channels in every layer:
+
+- Width 2 (1.5M params): smallest model, conv layers are 32x32, 64x64, 128x128
+- Width 4 (5.9M params): medium model, conv layers are 64x64, 128x128, 256x256
+- Width 10 (36.5M params): large model, conv layers are 160x160, 320x320, 640x640
+
+As width increases, the weight matrices grow quadratically. A 640x640 matrix has rank up to 640, giving the adaptive mechanism a much wider operating range (rank_min=16 to r_cap=448 with rank_fraction_max=0.7) compared to a 32x32 matrix.
+
+For each width, we ran 4 optimizers (AdamW, Dion, AdaDion, Muon) for 100 epochs. All used the same hyperparameters found in the ablation (lr=0.01, wd=0.1, etc.) without per-width tuning.
+
+Results showed AdaDion leads at every width on both datasets. On CIFAR-100, the margins are 2-3x larger than CIFAR-10. This makes sense: CIFAR-100 has 10x more classes, so the gradients have richer spectral structure (more distinct directions of variation), which the adaptive rank mechanism can exploit.
+
+Muon is 3.3x slower than AdamW on WRN-28-10 (20,413s vs 6,254s for 100 epochs) while barely matching Dion in accuracy. This is because Muon applies Newton-Schulz iteration (5 matrix multiplications per layer) to every weight matrix at every step, without any compression.
+
+### Rank Scale Sweep
+
+Hiroko asked us to fix rank_fraction to 1.0 (no cap on maximum rank) and instead vary the rank_scale factor gamma.
+
+Here is how gamma works in AdaDion's rank selection:
+
+1. At each step, the optimizer estimates the effective rank of the momentum matrix. The effective rank measures how many dimensions are "active" in the gradient. A matrix with 5 large singular values and many near-zero ones has effective rank approximately 5.
+
+2. The effective rank is smoothed with an exponential moving average (EMA) to reduce noise: `smoothed_erank = beta * erank + (1 - beta) * previous_smoothed`.
+
+3. The target rank is: `r_target = ceil(gamma * smoothed_erank)`. So gamma controls how much headroom above the effective rank the optimizer uses.
+
+4. The target is clamped to [rank_min, r_cap] and quantized to multiples of 8 (for GPU efficiency).
+
+5. The actual rank can only change by rank_step_up=16 or rank_step_down=8 per step, preventing wild oscillations.
+
+With gamma=0.5, the target rank is half the effective rank. Since rank_min=16 and the effective rank is around 130-150, the target is 65-75, but for many smaller layers the rank_min dominates.
+
+With gamma=2.0, the target rank is twice the effective rank, so about 260-300. This keeps the rank high enough to capture most of the gradient structure while still providing some compression.
+
+With gamma=3.0, the target is 390-450, near the maximum. This provides almost no compression and starts to overfit.
+
+The optimal gamma=2.0-2.5 matches what Tatsu independently found works best on LLaMA 320M pretraining, suggesting this parameter transfers across very different model scales and tasks.
+
+### Rank Dynamics Experiment
+
+This experiment directly visualizes how the effective rank and actual rank change during training.
+
+We ran AdaDion on ResNet-18 CIFAR-10 for 50 epochs (19,500 steps) at 6 different gamma values (0.5, 1.0, 1.5, 2.0, 2.5, 3.0), logging the rank at every single step. This produced 6 x 19,500 = 117,000 data points.
+
+The left panel of the figure shows effective rank vs training step. The effective rank (averaged across all layers) starts at about 155 in the first few hundred steps and gradually decreases to about 130 by the end of training. This happens at all gamma values because it reflects the optimization landscape, not the rank selection: as training progresses and the model converges, the gradient structure simplifies and fewer directions carry significant information.
+
+The right panel shows the actual rank used by the optimizer. Here the gamma values create clear stratification:
+
+- gamma=0.5 (blue): flat at rank_min=16. The formula gives target = 0.5 * 130 = 65, but most individual layers are small enough that rank_min dominates. The average rank across all layers is about 16.
+- gamma=1.0 (green): flat at about 20. Slightly above minimum.
+- gamma=1.5 (orange): starts at about 200 and gradually decreases to about 150. This is the most interesting case: the optimizer is actively adapting its rank downward as the effective rank decreases. This demonstrates the adaptive mechanism working as intended.
+- gamma=2.0 (red): stays around 175-190. High enough to capture most gradient structure.
+- gamma=2.5 (purple): stays around 195-205.
+- gamma=3.0 (brown): stays near 205-210, close to the maximum.
+
+The raw (faint) lines show per-step noise, while the smooth (bold) lines show the trend. The noise comes from the optimizer processing different layers in different batches, each with slightly different rank.
+
+The key insight from this experiment: the effective rank is an intrinsic property of the training dynamics that decreases over time, and gamma controls how the optimizer responds to this. Too low gamma wastes capacity by ignoring gradient information. Too high gamma wastes computation and communication by maintaining unnecessary rank. gamma=2.0 hits the sweet spot.
+
+## 21. Key Lessons
 
 1. When porting distributed optimizers to single-GPU, check every code path for distributed-only assumptions (mesh parameters, DTensor operations, world_size=1 edge cases).
 
