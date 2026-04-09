@@ -195,6 +195,41 @@ def create_optimizer(name: str, model: nn.Module, lr: float, rank: int = 64,
             return opt.get_comm_volume_gb()
         return opt, comm_fn
 
+    elif name == "polar_dion":
+        from benchmark.lm.polar_dion import PolarDion
+        opt = PolarDion(model.parameters(), lr=lr, rank=rank, beta=0.3,
+                        weight_decay=weight_decay, right_factor="polar", warmup_steps=5)
+        def comm_fn():
+            return opt.get_comm_volume_gb()
+        return opt, comm_fn
+
+    elif name == "gauge_polar_dion":
+        from benchmark.lm.polar_dion import PolarDion
+        opt = PolarDion(model.parameters(), lr=lr, rank=rank, beta=0.3,
+                        weight_decay=weight_decay, right_factor="gauge_polar",
+                        tau=1.0, gauge_mu=0.1, warmup_steps=5)
+        def comm_fn():
+            return opt.get_comm_volume_gb()
+        return opt, comm_fn
+
+    elif name == "interp_polar_05":
+        from benchmark.lm.polar_dion import PolarDion
+        opt = PolarDion(model.parameters(), lr=lr, rank=rank, beta=0.3,
+                        weight_decay=weight_decay, right_factor="interp",
+                        tau=0.5, warmup_steps=5)
+        def comm_fn():
+            return opt.get_comm_volume_gb()
+        return opt, comm_fn
+
+    elif name == "compressed_memory_dion":
+        from benchmark.lm.polar_dion import PolarDion
+        opt = PolarDion(model.parameters(), lr=lr, rank=rank, beta=0.3,
+                        weight_decay=weight_decay, right_factor="polar",
+                        use_compressed_memory=True, warmup_steps=5)
+        def comm_fn():
+            return opt.get_comm_volume_gb()
+        return opt, comm_fn
+
     elif name == "orth_dion":
         from benchmark.lm.dion_variants import OrthDion
         orth_opt = OrthDion(matrix_params, lr=lr, rank=rank, beta=1.0, weight_decay=weight_decay, warmup_steps=5)
@@ -529,6 +564,10 @@ LR_GRIDS = {
     "adadion_v2":         [0.005, 0.01, 0.02, 0.04],
     "adadion_v3":         [0.005, 0.01, 0.02, 0.04],
     "adadion_v3_adaptive":[0.005, 0.01, 0.02, 0.04],
+    "polar_dion":         [0.005, 0.01, 0.02, 0.04],
+    "gauge_polar_dion":   [0.005, 0.01, 0.02, 0.04],
+    "interp_polar_05":    [0.005, 0.01, 0.02, 0.04],
+    "compressed_memory_dion": [0.005, 0.01, 0.02, 0.04],
 }
 
 
