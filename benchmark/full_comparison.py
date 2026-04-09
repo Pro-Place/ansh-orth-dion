@@ -92,13 +92,13 @@ def get_fashionmnist(batch_size=256, num_workers=2):
 # Optimizer factory
 
 def _group_params(model):
-    """Split params into matrix (2D) and scalar (1D/other)."""
+    """Split params into spectral (2D+) and scalar (1D norms/biases)."""
     matrix_params = []
     scalar_params = []
     for name, p in model.named_parameters():
         if not p.requires_grad:
             continue
-        if p.ndim == 2:
+        if p.ndim >= 2:
             matrix_params.append(p)
         else:
             scalar_params.append(p)

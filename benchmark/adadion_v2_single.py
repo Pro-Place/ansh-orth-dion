@@ -120,11 +120,16 @@ class AdaDionV2Single(Optimizer):
                 G = p.grad
 
                 # 1D params: AdamW
-                if G.ndim != 2:
+                if G.ndim == 1:
                     self._adamw_step(p, G, group)
                     continue
 
-                # 2D params: Dion V2 update
+                # Flatten 4D conv to 2D
+                orig_shape = None
+                if G.ndim > 2:
+                    orig_shape = G.shape
+                    G = G.view(G.shape[0], -1)
+
                 m, n = G.shape
                 state = self.state[p]
 
@@ -142,8 +147,9 @@ class AdaDionV2Single(Optimizer):
                     state["step"] = 0
                     state["rank"] = r
                     state["r_cap"] = r_cap
-                    state["momentum"] = torch.zeros_like(G)
+                    state["momentum"] = torch.zeros(m, n, device=G.device, dtype=G.dtype)
                     state["Q"] = _col_norm(torch.randn(n, r, device=G.device, dtype=G.dtype))
+                    state["orig_shape"] = orig_shape
                     state["erank_ema"] = float(r)
 
                 state["step"] += 1
@@ -177,7 +183,8 @@ class AdaDionV2Single(Optimizer):
                 # === Parameter update ===
                 # Scale by lr / r for normalization
                 scaled_lr = effective_lr * math.sqrt(min(m, n) / r)
-                p.addmm_(P, Q_new[:, :r].t(), alpha=-scaled_lr)
+                p_flat = p.data.view(m, n) if orig_shape is not None else p.data
+                p_flat.addmm_(P, Q_new[:, :r].t(), alpha=-scaled_lr)
 
                 # === Update Q for warm-start ===
                 state["Q"][:, :r] = Q_new[:, :r]

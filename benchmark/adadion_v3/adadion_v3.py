@@ -223,15 +223,27 @@ class AdaDionV3(Optimizer):
 
                 G = p.grad
 
-                # Non-spectral params: internal AdamW
-                # Applies to: 1D params (norms, biases), embeddings
-                # (very tall/wide matrices where spectral update is wrong),
-                # and any matrix smaller than the rank.
-                if G.ndim != 2 or min(G.shape) < rank_default or max(G.shape) > 16 * min(G.shape):
+                # 1D params (norms, biases): internal AdamW
+                if G.ndim == 1:
                     self._adamw_step(p, G, group)
                     continue
 
-                # 2D matrix params: Dion V3 spectral update
+                # Embeddings (very tall/wide): internal AdamW
+                if G.ndim == 2 and max(G.shape) > 16 * min(G.shape):
+                    self._adamw_step(p, G, group)
+                    continue
+
+                # Flatten 4D conv params to 2D
+                orig_shape = None
+                if G.ndim > 2:
+                    orig_shape = G.shape
+                    G = G.view(G.shape[0], -1)
+
+                # Too small for spectral: AdamW
+                if min(G.shape) < rank_default:
+                    self._adamw_step(p, p.grad, group)
+                    continue
+
                 m, n = G.shape
                 state = self.state[p]
 
@@ -239,8 +251,9 @@ class AdaDionV3(Optimizer):
                     r = min(rank_default, m, n)
                     state["step"] = 0
                     state["rank"] = r
-                    state["R"] = torch.zeros_like(G)
+                    state["R"] = torch.zeros(m, n, device=G.device, dtype=G.dtype)
                     state["V"] = _orth(torch.randn(n, r, device=G.device, dtype=G.dtype))
+                    state["orig_shape"] = orig_shape
                     state["prev_modes"] = None
                     state["rho_ema"] = torch.zeros(r, device=G.device)
                     state["erank_ema"] = float(r)
@@ -279,11 +292,8 @@ class AdaDionV3(Optimizer):
                 V_bar = _col_norm(W)
 
                 # ===== STEP 6: Parameter update =====
-                # D = U @ V_bar^T with ||D||_F ≈ sqrt(r).
-                # No LR scaling — the base LR is tuned for this norm,
-                # matching the Dion/Muon convention where lr=0.01-0.02
-                # is used directly with the rank-r update.
-                p.addmm_(U, V_bar.t(), alpha=-effective_lr)
+                p_flat = p.data.view(m, n) if orig_shape is not None else p.data
+                p_flat.addmm_(U, V_bar.t(), alpha=-effective_lr)
 
                 # ===== STEP 7: Per-mode persistence =====
                 UtG = U.t() @ G  # (r, n) — per-mode gradient projection

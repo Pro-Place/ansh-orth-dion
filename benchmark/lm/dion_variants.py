@@ -138,12 +138,19 @@ class DionBase(Optimizer):
                 if p.grad is None:
                     continue
                 G = p.grad
-                if G.ndim != 2:
-                    # Non-matrix params: plain SGD with weight decay
+
+                # 1D params (biases, norms): plain SGD
+                if G.ndim == 1:
                     if wd > 0:
                         p.mul_(1 - lr * wd)
                     p.add_(G, alpha=-lr)
                     continue
+
+                # 4D conv params: flatten to 2D (out_channels, in*kH*kW)
+                orig_shape = None
+                if G.ndim > 2:
+                    orig_shape = G.shape
+                    G = G.view(G.shape[0], -1)
 
                 m, n = G.shape
                 r = min(rank, m, n)
@@ -151,15 +158,15 @@ class DionBase(Optimizer):
                 state = self.state[p]
                 if len(state) == 0:
                     state["step"] = 0
-                    state["momentum"] = torch.zeros_like(G)
-                    # Initialize V for warm-start: random orthonormal (n x r)
+                    state["momentum"] = torch.zeros(m, n, device=G.device, dtype=G.dtype)
                     V_init = torch.randn(n, r, device=G.device, dtype=G.dtype)
                     state["V"] = _orth(V_init)
-                    state["R"] = torch.zeros_like(G)  # error feedback buffer
-                    state["prev_out_of_subspace_grad"] = None  # for rho_t
+                    state["R"] = torch.zeros(m, n, device=G.device, dtype=G.dtype)
+                    state["prev_out_of_subspace_grad"] = None
                     state["rho_ema"] = 0.0
                     state["R_norm_ema"] = 0.0
                     state["beta_current"] = group["beta"]
+                    state["orig_shape"] = orig_shape
 
                 state["step"] += 1
                 step_num = state["step"]
@@ -209,8 +216,9 @@ class DionBase(Optimizer):
                 if warmup > 0 and step_num <= warmup:
                     effective_lr = lr * step_num / warmup
 
-                # --- Parameter update ---
-                p.add_(D, alpha=-effective_lr)
+                # --- Parameter update (apply to 2D view for conv params) ---
+                p_flat = p.data.view(m, n) if orig_shape is not None else p.data
+                p_flat.add_(D, alpha=-effective_lr)
 
                 # --- Error feedback ---
                 R_new = self._error_feedback(M, U, beta, state)
