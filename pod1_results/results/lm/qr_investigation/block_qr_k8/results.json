@@ -1,0 +1,12 @@
+{
+  "name": "block_qr_k8",
+  "right_factor": "block_qr",
+  "rank": 64,
+  "beta": 0.3,
+  "power_iters": 1,
+  "block_size": 8,
+  "n_corrections": 1,
+  "switch_step": null,
+  "final_val_loss": 6.396770811080932,
+  "total_time_s": 992.6613569259644
+}

@@ -1,0 +1,90 @@
+{
+  "results": [
+    {
+      "lambda": 0.0,
+      "delta_f_mean": -0.21594161987304689,
+      "delta_f_std": 0.005752211869778628,
+      "n_batches": 10
+    },
+    {
+      "lambda": 0.25,
+      "delta_f_mean": -0.21263740062713624,
+      "delta_f_std": 0.005922420379803867,
+      "n_batches": 10
+    },
+    {
+      "lambda": 0.5,
+      "delta_f_mean": -0.20340116024017335,
+      "delta_f_std": 0.006362967916574136,
+      "n_batches": 10
+    },
+    {
+      "lambda": 0.75,
+      "delta_f_mean": -0.19034240245819092,
+      "delta_f_std": 0.00693806614013831,
+      "n_batches": 10
+    },
+    {
+      "lambda": 1.0,
+      "delta_f_mean": -0.17589550018310546,
+      "delta_f_std": 0.007477234067709627,
+      "n_batches": 10
+    },
+    {
+      "lambda": 1.25,
+      "delta_f_mean": -0.16174781322479248,
+      "delta_f_std": 0.007883554287965631,
+      "n_batches": 10
+    },
+    {
+      "lambda": 1.5,
+      "delta_f_mean": -0.1487072229385376,
+      "delta_f_std": 0.00813473951356912,
+      "n_batches": 10
+    },
+    {
+      "lambda": 1.75,
+      "delta_f_mean": -0.13702497482299805,
+      "delta_f_std": 0.00824671130396284,
+      "n_batches": 10
+    },
+    {
+      "lambda": 2.0,
+      "delta_f_mean": -0.12668442726135254,
+      "delta_f_std": 0.008248134311356294,
+      "n_batches": 10
+    },
+    {
+      "lambda": 2.5,
+      "delta_f_mean": -0.10951855182647705,
+      "delta_f_std": 0.0080273481791983,
+      "n_batches": 10
+    },
+    {
+      "lambda": 3.0,
+      "delta_f_mean": -0.09607861042022706,
+      "delta_f_std": 0.007644477249325209,
+      "n_batches": 10
+    },
+    {
+      "lambda": 4.0,
+      "delta_f_mean": -0.07677195072174073,
+      "delta_f_std": 0.006749022615922374,
+      "n_batches": 10
+    },
+    {
+      "lambda": 5.0,
+      "delta_f_mean": -0.06379268169403077,
+      "delta_f_std": 0.005914402356584147,
+      "n_batches": 10
+    }
+  ],
+  "fit": {
+    "a": -0.2995527638253846,
+    "b": 0.14358988044583013,
+    "c": -0.01746071010022188,
+    "sweet_spot_quadratic": 1.0430845227230066,
+    "sweet_spot_cubic": 1.4012109531484536
+  },
+  "checkpoint": "results/lm/laura_reproduction/dion_beta_1.0/ckpt_step15000.pt"
+}

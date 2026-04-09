@@ -1,0 +1,12 @@
+{
+  "name": "qr_r64_pow3",
+  "right_factor": "qr",
+  "rank": 64,
+  "beta": 0.3,
+  "power_iters": 3,
+  "block_size": 8,
+  "n_corrections": 1,
+  "switch_step": null,
+  "final_val_loss": 6.395186154047648,
+  "total_time_s": 1219.3126902580261
+}

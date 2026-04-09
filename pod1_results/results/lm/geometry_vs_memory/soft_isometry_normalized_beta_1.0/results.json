@@ -1,0 +1,12 @@
+{
+  "name": "soft_isometry_normalized_beta_1.0",
+  "variant": "soft_isometry",
+  "rank": 64,
+  "beta": 1.0,
+  "mu": 0.0,
+  "final_val_loss": 5.276243193944295,
+  "final_val_ppl": 195.63353582335125,
+  "best_val_loss": 5.274335734049479,
+  "total_steps": 30000,
+  "total_time_s": 2706.274088859558
+}

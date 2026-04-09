@@ -1,0 +1,12 @@
+{
+  "name": "switch_at_5k",
+  "right_factor": "colnorm",
+  "rank": 64,
+  "beta": 0.3,
+  "power_iters": 1,
+  "block_size": 8,
+  "n_corrections": 1,
+  "switch_step": 5000,
+  "final_val_loss": 5.45663374265035,
+  "total_time_s": 887.2175326347351
+}

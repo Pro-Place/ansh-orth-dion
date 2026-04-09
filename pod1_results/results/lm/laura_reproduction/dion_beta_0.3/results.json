@@ -1,0 +1,12 @@
+{
+  "name": "dion_beta_0.3",
+  "variant": "stripped_dion",
+  "rank": 64,
+  "beta": 0.3,
+  "mu": 0.0,
+  "final_val_loss": 3.306371259689331,
+  "final_val_ppl": 27.285932045629043,
+  "best_val_loss": 3.3051544427871704,
+  "total_steps": 30000,
+  "total_time_s": 2554.2508249282837
+}

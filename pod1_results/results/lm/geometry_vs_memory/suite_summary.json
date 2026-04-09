@@ -1,0 +1,98 @@
+{
+  "dion_beta_0.3": {
+    "name": "dion_beta_0.3",
+    "variant": "stripped_dion",
+    "rank": 64,
+    "beta": 0.3,
+    "mu": 0.0,
+    "final_val_loss": 4.072125871976216,
+    "final_val_ppl": 58.68157961066066,
+    "best_val_loss": 4.076129182179769,
+    "total_steps": 30000,
+    "total_time_s": 2475.669422864914
+  },
+  "dion_beta_1.0": {
+    "name": "dion_beta_1.0",
+    "variant": "stripped_dion",
+    "rank": 64,
+    "beta": 1.0,
+    "mu": 0.0,
+    "final_val_loss": 4.200754714012146,
+    "final_val_ppl": 66.73667914620079,
+    "best_val_loss": 4.202695226669311,
+    "total_steps": 30000,
+    "total_time_s": 2475.023061275482
+  },
+  "orth_dion_beta_0.3": {
+    "name": "orth_dion_beta_0.3",
+    "variant": "orth_dion",
+    "rank": 64,
+    "beta": 0.3,
+    "mu": 0.0,
+    "final_val_loss": 5.235291544596354,
+    "final_val_ppl": 187.78384572983026,
+    "best_val_loss": 5.188957420984904,
+    "total_steps": 30000,
+    "total_time_s": 2684.127870798111
+  },
+  "orth_dion_beta_1.0": {
+    "name": "orth_dion_beta_1.0",
+    "variant": "orth_dion",
+    "rank": 64,
+    "beta": 1.0,
+    "mu": 0.0,
+    "final_val_loss": 5.221425787607829,
+    "final_val_ppl": 185.19804900156936,
+    "best_val_loss": 5.224256642659506,
+    "total_steps": 30000,
+    "total_time_s": 2671.635372877121
+  },
+  "soft_isometry_normalized_beta_0.3": {
+    "name": "soft_isometry_normalized_beta_0.3",
+    "variant": "soft_isometry",
+    "rank": 64,
+    "beta": 0.3,
+    "mu": 0.0,
+    "final_val_loss": 5.282984972000122,
+    "final_val_ppl": 196.9569096359659,
+    "best_val_loss": 5.280319770177205,
+    "total_steps": 30000,
+    "total_time_s": 2708.7997057437897
+  },
+  "soft_isometry_normalized_beta_1.0": {
+    "name": "soft_isometry_normalized_beta_1.0",
+    "variant": "soft_isometry",
+    "rank": 64,
+    "beta": 1.0,
+    "mu": 0.0,
+    "final_val_loss": 5.276243193944295,
+    "final_val_ppl": 195.63353582335125,
+    "best_val_loss": 5.274335734049479,
+    "total_steps": 30000,
+    "total_time_s": 2706.274088859558
+  },
+  "modewise_per_mode_orth": {
+    "name": "modewise_per_mode_orth",
+    "variant": "modewise_beta",
+    "rank": 64,
+    "beta": 0.3,
+    "mu": 0.0,
+    "final_val_loss": 5.2147727330525715,
+    "final_val_ppl": 183.9700059265715,
+    "best_val_loss": 5.210438283284505,
+    "total_steps": 30000,
+    "total_time_s": 2689.8405632972717
+  },
+  "modewise_per_mode_colnorm": {
+    "name": "modewise_per_mode_colnorm",
+    "variant": "modewise_beta",
+    "rank": 64,
+    "beta": 0.3,
+    "mu": 0.0,
+    "final_val_loss": 4.088904452323914,
+    "final_val_ppl": 59.67447964217775,
+    "best_val_loss": 4.090340344111125,
+    "total_steps": 30000,
+    "total_time_s": 2489.7828114032745
+  }
+}

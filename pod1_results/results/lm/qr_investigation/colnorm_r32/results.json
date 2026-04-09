@@ -1,0 +1,12 @@
+{
+  "name": "colnorm_r32",
+  "right_factor": "colnorm",
+  "rank": 32,
+  "beta": 0.3,
+  "power_iters": 1,
+  "block_size": 8,
+  "n_corrections": 1,
+  "switch_step": null,
+  "final_val_loss": 4.119348994890848,
+  "total_time_s": 789.142520904541
+}
