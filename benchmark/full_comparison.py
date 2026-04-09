@@ -195,6 +195,55 @@ def create_optimizer(name: str, model: nn.Module, lr: float, rank: int = 64,
             return opt.get_comm_volume_gb()
         return opt, comm_fn
 
+    elif name == "orth_dion":
+        from benchmark.lm.dion_variants import OrthDion
+        orth_opt = OrthDion(matrix_params, lr=lr, rank=rank, beta=1.0, weight_decay=weight_decay, warmup_steps=5)
+        adamw = AdamW(scalar_params, lr=lr*0.1, weight_decay=weight_decay) if scalar_params else None
+
+        class CombinedOpt:
+            def __init__(self, d, a):
+                self.dion = d
+                self.adamw = a
+                self.param_groups = list(d.param_groups) + (list(a.param_groups) if a else [])
+            def step(self, closure=None):
+                self.dion.step(closure)
+                if self.adamw:
+                    self.adamw.step()
+            def zero_grad(self, set_to_none=False):
+                self.dion.zero_grad(set_to_none=set_to_none)
+                if self.adamw:
+                    self.adamw.zero_grad(set_to_none=set_to_none)
+
+        opt = CombinedOpt(orth_opt, adamw)
+        total_matrix = sum(p.numel() for p in matrix_params)
+        m_avg = int(math.sqrt(total_matrix / max(len(matrix_params), 1)))
+        comm_per_step = 2 * m_avg * rank * len(matrix_params)
+        step_count = [0]
+        def comm_fn():
+            return step_count[0] * comm_per_step * 4 / 1e9
+        original_step = opt.step
+        def tracked_step(*a, **kw):
+            step_count[0] += 1
+            return original_step(*a, **kw)
+        opt.step = tracked_step
+        return opt, comm_fn
+
+    elif name == "ada_orth_dion":
+        from benchmark.adadion_v2_single import AdaDionV2Single
+        # Ada-Orth-Dion: V2 adaptive rank but we swap ColNorm for QR internally
+        # Since V2 uses ColNorm, we create a modified version that uses QR
+        # by patching the column_normalize call
+        opt = AdaDionV2Single(
+            model.parameters(), lr=lr, rank=rank, mu=0.95,
+            weight_decay=weight_decay, adaptive_rank=True,
+            init_rank_fraction=0.25, rank_fraction_max=0.7,
+            warmup_steps=5, scalar_lr=lr * 0.1,
+            use_qr=True,  # flag to use QR instead of ColNorm
+        )
+        def comm_fn():
+            return opt.get_comm_volume_gb()
+        return opt, comm_fn
+
     elif name in ("dion", "dion2"):
         try:
             import dion as dion_pkg
@@ -342,6 +391,7 @@ def run_experiment(
     default_lrs = {
         "adamw": 1e-3, "muon": 0.02, "dion": 0.02, "dion2": 0.02,
         "adadion_v2": 0.02, "adadion_v3": 0.02, "adadion_v3_adaptive": 0.02,
+        "orth_dion": 0.02, "ada_orth_dion": 0.02,
     }
     if lr is None:
         lr = default_lrs.get(opt_name, 0.01)
@@ -475,7 +525,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", default="all", choices=["cifar10", "fashionmnist", "all"])
     parser.add_argument("--optimizers", nargs="+",
-                        default=["adamw", "dion", "dion2", "adadion_v2", "adadion_v3", "adadion_v3_adaptive", "muon"])
+                        default=["adamw", "dion", "dion2", "adadion_v2", "adadion_v3", "adadion_v3_adaptive", "orth_dion", "ada_orth_dion", "muon"])
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--rank", type=int, default=64)
     parser.add_argument("--device", default="cuda")

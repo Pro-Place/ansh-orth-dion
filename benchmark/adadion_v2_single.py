@@ -28,6 +28,11 @@ def _col_norm(W: Tensor, eps: float = 1e-8) -> Tensor:
     return W / W.norm(dim=0, keepdim=True).clamp(min=eps)
 
 
+def _qr_norm(W: Tensor) -> Tensor:
+    Q, _ = torch.linalg.qr(W, mode="reduced")
+    return Q
+
+
 def _effective_rank(sigma: Tensor, eps: float = 1e-12) -> float:
     sigma = sigma.clamp(min=eps)
     p = sigma / sigma.sum()
@@ -55,6 +60,7 @@ class AdaDionV2Single(Optimizer):
         weight_decay: float = 0.0,
         power_iters: int = 1,
         warmup_steps: int = 5,
+        use_qr: bool = False,
         # Adaptive rank
         adaptive_rank: bool = True,
         erank_ema_beta: float = 0.9,
@@ -80,6 +86,7 @@ class AdaDionV2Single(Optimizer):
         )
         super().__init__(params, defaults)
         self._comm_volume = 0.0
+        self._use_qr = use_qr
 
     def get_comm_volume_gb(self) -> float:
         return self._comm_volume * 4 / 1e9
@@ -161,7 +168,7 @@ class AdaDionV2Single(Optimizer):
                 for _ in range(group["power_iters"]):
                     P = _orth(M @ Q[:, :r])       # (m, r)
                     R_mat = M.t() @ P              # (n, r)
-                    Q_new = _col_norm(R_mat)
+                    Q_new = _qr_norm(R_mat) if self._use_qr else _col_norm(R_mat)
 
                 # === Error feedback (V2 style): subtract from momentum ===
                 # M -= (1 - mu) * P @ R^T  (this is V2's error feedback)
