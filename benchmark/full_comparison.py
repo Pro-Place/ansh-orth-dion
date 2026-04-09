@@ -519,14 +519,52 @@ def run_experiment(
     return result
 
 
-# Main
+LR_GRIDS = {
+    "adamw":              [3e-4, 1e-3, 3e-3, 5e-3],
+    "muon":               [0.005, 0.01, 0.02, 0.04],
+    "dion":               [0.005, 0.01, 0.02, 0.04],
+    "dion2":              [0.005, 0.01, 0.02, 0.04],
+    "orth_dion":          [0.005, 0.01, 0.02, 0.04],
+    "ada_orth_dion":      [0.005, 0.01, 0.02, 0.04],
+    "adadion_v2":         [0.005, 0.01, 0.02, 0.04],
+    "adadion_v3":         [0.005, 0.01, 0.02, 0.04],
+    "adadion_v3_adaptive":[0.005, 0.01, 0.02, 0.04],
+}
+
+
+def run_sweep(opt_name, dataset, sweep_epochs, rank, device, seed, output_dir):
+    """Sweep LRs for one optimizer. Returns best LR."""
+    lrs = LR_GRIDS.get(opt_name, [0.005, 0.01, 0.02])
+    best_lr = lrs[0]
+    best_acc = 0.0
+    print(f"\n  Sweeping {opt_name} on {dataset}: LRs = {lrs}")
+    for lr_val in lrs:
+        try:
+            r = run_experiment(
+                opt_name, dataset=dataset, epochs=sweep_epochs, lr=lr_val,
+                rank=rank, device=device, seed=seed,
+                output_dir=os.path.join(output_dir, "sweep"),
+            )
+            acc = r.get("best_test_acc", 0)
+            print(f"    lr={lr_val}: acc={acc:.4f}")
+            if acc > best_acc:
+                best_acc = acc
+                best_lr = lr_val
+        except Exception as e:
+            print(f"    lr={lr_val}: ERROR {e}")
+    print(f"  Best for {opt_name}: lr={best_lr} (acc={best_acc:.4f})")
+    return best_lr
+
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", default="full", choices=["single", "sweep", "best", "full"])
     parser.add_argument("--dataset", default="all", choices=["cifar10", "fashionmnist", "all"])
     parser.add_argument("--optimizers", nargs="+",
                         default=["adamw", "dion", "dion2", "adadion_v2", "adadion_v3", "adadion_v3_adaptive", "orth_dion", "ada_orth_dion", "muon"])
-    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--epochs", type=int, default=200)
+    parser.add_argument("--sweep_epochs", type=int, default=50)
+    parser.add_argument("--lr", type=float, default=None)
     parser.add_argument("--rank", type=int, default=64)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--seed", type=int, default=42)
@@ -535,40 +573,79 @@ def main():
 
     datasets = ["cifar10", "fashionmnist"] if args.dataset == "all" else [args.dataset]
 
-    all_results = {}
-    for ds in datasets:
-        for opt_name in args.optimizers:
-            key = f"{ds}/{opt_name}"
-            try:
-                result = run_experiment(
-                    opt_name, dataset=ds, epochs=args.epochs,
-                    rank=args.rank, device=args.device, seed=args.seed,
-                    output_dir=args.output_dir,
-                )
-                all_results[key] = result
-            except Exception as e:
-                print(f"ERROR in {key}: {e}")
-                import traceback
-                traceback.print_exc()
-                all_results[key] = {"error": str(e)}
+    if args.mode == "single":
+        for ds in datasets:
+            for opt_name in args.optimizers:
+                run_experiment(opt_name, dataset=ds, epochs=args.epochs, lr=args.lr,
+                               rank=args.rank, device=args.device, seed=args.seed,
+                               output_dir=args.output_dir)
+        return
 
-    # Summary
-    summary_path = os.path.join(args.output_dir, "summary.json")
-    os.makedirs(args.output_dir, exist_ok=True)
-    with open(summary_path, "w") as f:
-        json.dump(all_results, f, indent=2)
+    if args.mode == "sweep":
+        for ds in datasets:
+            for opt_name in args.optimizers:
+                run_sweep(opt_name, ds, args.sweep_epochs, args.rank,
+                          args.device, args.seed, args.output_dir)
+        return
 
-    print(f"\n{'='*80}")
-    print(f"{'Dataset':<15} {'Optimizer':<20} {'Test Acc':>10} {'Comm (GB)':>10} {'Time (s)':>10} {'Mem (GB)':>10}")
-    print(f"{'-'*80}")
-    for key, r in sorted(all_results.items()):
-        if "error" in r:
-            print(f"{key:<35} ERROR: {r['error'][:40]}")
-        else:
-            print(f"{r['dataset']:<15} {r['optimizer']:<20} "
-                  f"{r['best_test_acc']:>10.4f} {r['total_comm_gb']:>10.2f} "
-                  f"{r['total_time_s']:>10.0f} {r['peak_gpu_mem_gb']:>10.2f}")
-    print(f"{'='*80}")
+    if args.mode in ("best", "full"):
+        all_results = {}
+        for ds in datasets:
+            best_lrs = {}
+
+            if args.mode == "full":
+                print(f"\n{'='*60}")
+                print(f"PHASE 1: LR sweep on {ds} ({args.sweep_epochs} epochs per LR)")
+                print(f"{'='*60}")
+                for opt_name in args.optimizers:
+                    best_lrs[opt_name] = run_sweep(
+                        opt_name, ds, args.sweep_epochs, args.rank,
+                        args.device, args.seed, args.output_dir,
+                    )
+                lr_path = os.path.join(args.output_dir, f"best_lrs_{ds}.json")
+                os.makedirs(args.output_dir, exist_ok=True)
+                with open(lr_path, "w") as f:
+                    json.dump(best_lrs, f, indent=2)
+                print(f"\nBest LRs for {ds}: {best_lrs}")
+            else:
+                lr_path = os.path.join(args.output_dir, f"best_lrs_{ds}.json")
+                best_lrs = json.load(open(lr_path))
+
+            print(f"\n{'='*60}")
+            print(f"PHASE 2: Full runs on {ds} ({args.epochs} epochs, tuned LRs)")
+            print(f"{'='*60}")
+            for opt_name in args.optimizers:
+                lr_val = best_lrs.get(opt_name, 0.01)
+                key = f"{ds}/{opt_name}"
+                try:
+                    result = run_experiment(
+                        opt_name, dataset=ds, epochs=args.epochs, lr=lr_val,
+                        rank=args.rank, device=args.device, seed=args.seed,
+                        output_dir=args.output_dir,
+                    )
+                    all_results[key] = result
+                except Exception as e:
+                    print(f"ERROR in {key}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    all_results[key] = {"error": str(e)}
+
+        summary_path = os.path.join(args.output_dir, "summary.json")
+        os.makedirs(args.output_dir, exist_ok=True)
+        with open(summary_path, "w") as f:
+            json.dump(all_results, f, indent=2)
+
+        print(f"\n{'='*80}")
+        print(f"{'Dataset':<15} {'Optimizer':<22} {'LR':>8} {'Test Acc':>10} {'Comm (GB)':>10} {'Mem (GB)':>10}")
+        print(f"{'-'*80}")
+        for key, r in sorted(all_results.items(), key=lambda x: -x[1].get("best_test_acc", 0)):
+            if "error" in r:
+                print(f"{key:<37} ERROR: {r['error'][:35]}")
+            else:
+                print(f"{r['dataset']:<15} {r['optimizer']:<22} {r['lr']:>8.4f} "
+                      f"{r['best_test_acc']:>10.4f} {r['total_comm_gb']:>10.2f} "
+                      f"{r['peak_gpu_mem_gb']:>10.2f}")
+        print(f"{'='*80}")
 
 
 if __name__ == "__main__":
