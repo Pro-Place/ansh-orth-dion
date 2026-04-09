@@ -129,9 +129,7 @@ class AdaDionConfig:
     scalar_eps: float = 1e-8
 
 
-# ======================================================================
 # Hyperparameter sweep grids
-# ======================================================================
 
 SWEEP_GRIDS = {
     "adamw": {
@@ -166,9 +164,7 @@ SWEEP_GRIDS = {
 }
 
 
-# ======================================================================
 # Model configurations
-# ======================================================================
 
 MODEL_CONFIGS = {
     "resnet18": {"num_classes": 10},
@@ -186,9 +182,7 @@ MODEL_CONFIGS = {
 }
 
 
-# ======================================================================
 # Preset experiment configs
-# ======================================================================
 
 def get_default_optimizer_config(name: str):
     """Return the default optimizer config for a given name."""

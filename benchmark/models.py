@@ -12,9 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# ======================================================================
 # ResNet for CIFAR-10 (adapted from torchvision, smaller stem)
-# ======================================================================
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -71,9 +69,7 @@ class ResNet(nn.Module):
         return self.fc(out)
 
 
-# ======================================================================
 # VGG-16-BN for CIFAR-10
-# ======================================================================
 
 class VGG16BN(nn.Module):
     def __init__(self, num_classes=10):
@@ -107,9 +103,7 @@ class VGG16BN(nn.Module):
         return self.classifier(x)
 
 
-# ======================================================================
 # Vision Transformer for CIFAR-10
-# ======================================================================
 
 class PatchEmbed(nn.Module):
     def __init__(self, img_size=32, patch_size=4, in_chans=3, embed_dim=384):
@@ -226,9 +220,7 @@ class ViTSmall(nn.Module):
         return self.head(x)
 
 
-# ======================================================================
 # Factory
-# ======================================================================
 
 def create_model(name: str, **kwargs) -> nn.Module:
     """Create a model by name."""

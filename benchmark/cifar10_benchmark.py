@@ -69,9 +69,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# ======================================================================
 # Data loading
-# ======================================================================
 
 def get_cifar10_loaders(batch_size: int, num_workers: int, seed: int):
     """Create CIFAR-10 train and test data loaders with standard augmentation."""
@@ -127,9 +125,7 @@ def get_cifar10_loaders(batch_size: int, num_workers: int, seed: int):
     return train_loader, test_loader
 
 
-# ======================================================================
 # LR Scheduler
-# ======================================================================
 
 def create_lr_scheduler(optimizer, base_config: BaseConfig, steps_per_epoch: int):
     """Create a cosine LR scheduler with linear warmup."""
@@ -151,9 +147,7 @@ def create_lr_scheduler(optimizer, base_config: BaseConfig, steps_per_epoch: int
     return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
 
-# ======================================================================
 # Training and evaluation
-# ======================================================================
 
 @torch.no_grad()
 def evaluate(model: nn.Module, loader: DataLoader, device: torch.device,
@@ -411,9 +405,7 @@ def train_one_run(
     return summary
 
 
-# ======================================================================
 # Sweep mode
-# ======================================================================
 
 def run_lr_sweep(
     base_config: BaseConfig,
@@ -457,9 +449,7 @@ def run_lr_sweep(
     return results
 
 
-# ======================================================================
 # Full benchmark mode
-# ======================================================================
 
 def run_full_benchmark(output_dir: str):
     """Run the complete benchmark suite."""
@@ -506,9 +496,7 @@ def run_full_benchmark(output_dir: str):
     return all_results
 
 
-# ======================================================================
 # Smoke test mode
-# ======================================================================
 
 def run_smoke_test(output_dir: str):
     """Quick smoke test: 3 epochs, all optimizers, resnet18 only."""
@@ -539,9 +527,7 @@ def run_smoke_test(output_dir: str):
     return all_results
 
 
-# ======================================================================
 # CLI
-# ======================================================================
 
 def main():
     parser = argparse.ArgumentParser(description="CIFAR-10 Optimizer Benchmark")

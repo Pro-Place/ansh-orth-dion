@@ -77,9 +77,7 @@ def run_ablation(output_dir: str):
         with open(os.path.join(output_dir, "ablation_results.json"), "w") as f:
             json.dump(all_results, f, indent=2, default=str)
 
-    # ================================================================
     # PHASE 1: Baselines (AdamW, Muon, Dion at known-good configs)
-    # ================================================================
     logger.info("\n" + "="*70 + "\n  PHASE 1: BASELINES\n" + "="*70)
 
     # AdamW baseline
@@ -97,9 +95,7 @@ def run_ablation(output_dir: str):
         scalar_lr=1e-3,
     ))
 
-    # ================================================================
     # PHASE 2: AdaDion LR sweep (the most critical axis)
-    # ================================================================
     logger.info("\n" + "="*70 + "\n  PHASE 2: AdaDion LR SWEEP\n" + "="*70)
 
     for lr in [0.002, 0.005, 0.01, 0.02, 0.04]:
@@ -123,9 +119,7 @@ def run_ablation(output_dir: str):
         )
         run_and_record(f"adadion_lr{lr}", make_base(), cfg)
 
-    # ================================================================
     # PHASE 3: adaptive_rank ON vs OFF (isolate adaptive mechanism)
-    # ================================================================
     logger.info("\n" + "="*70 + "\n  PHASE 3: ADAPTIVE RANK ABLATION\n" + "="*70)
 
     # Find best LR from phase 2
@@ -156,9 +150,7 @@ def run_ablation(output_dir: str):
         scalar_betas=(0.95, 0.95), scalar_weight_decay=0.1,
     ))
 
-    # ================================================================
     # PHASE 4: Gradient clipping ablation
-    # ================================================================
     logger.info("\n" + "="*70 + "\n  PHASE 4: GRADIENT CLIPPING ABLATION\n" + "="*70)
 
     # No gradient clipping
@@ -181,9 +173,7 @@ def run_ablation(output_dir: str):
         scalar_betas=(0.95, 0.95), scalar_weight_decay=0.1,
     ))
 
-    # ================================================================
     # PHASE 5: Weight decay ablation
-    # ================================================================
     logger.info("\n" + "="*70 + "\n  PHASE 5: WEIGHT DECAY ABLATION\n" + "="*70)
 
     for wd in [0.0, 0.01, 0.05]:
@@ -196,9 +186,7 @@ def run_ablation(output_dir: str):
             scalar_betas=(0.95, 0.95), scalar_weight_decay=wd,
         ))
 
-    # ================================================================
     # PHASE 6: Rank fraction ablation
-    # ================================================================
     logger.info("\n" + "="*70 + "\n  PHASE 6: RANK FRACTION ABLATION\n" + "="*70)
 
     for rf in [0.125, 0.25, 0.5, 0.75, 1.0]:
@@ -211,9 +199,7 @@ def run_ablation(output_dir: str):
             scalar_betas=(0.95, 0.95), scalar_weight_decay=0.1,
         ))
 
-    # ================================================================
     # PHASE 7: Scalar LR decoupling
-    # ================================================================
     logger.info("\n" + "="*70 + "\n  PHASE 7: SCALAR LR DECOUPLING\n" + "="*70)
 
     for slr in [1e-3, 3e-3, 0.01]:
@@ -226,9 +212,7 @@ def run_ablation(output_dir: str):
             scalar_betas=(0.9, 0.999), scalar_weight_decay=0.05,
         ))
 
-    # ================================================================
     # FINAL SUMMARY
-    # ================================================================
     print("\n" + "="*90)
     print(f"{'Ablation':<35} {'Best Val Acc':>12} {'Epoch':>6} {'Time':>8}")
     print("="*90)

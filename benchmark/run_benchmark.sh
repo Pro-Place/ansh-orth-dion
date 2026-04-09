@@ -1,20 +1,15 @@
 #!/bin/bash
-# ======================================================================
 # Full Benchmark Launch Script for RunPod
-#
 # Runs the complete benchmark pipeline:
 #   1. Smoke test (3 epochs, verify all optimizers work)
 #   2. Full benchmark (200 epochs, 2 models × 5 optimizers × 3 seeds)
 #   3. LR sweeps for each optimizer
 #   4. Analysis and plot generation
-#
-# Usage:
 #   bash run_benchmark.sh              # Full pipeline
 #   bash run_benchmark.sh smoke        # Smoke test only
 #   bash run_benchmark.sh full         # Full benchmark only
 #   bash run_benchmark.sh sweep        # LR sweeps only
 #   bash run_benchmark.sh analyze      # Analysis only
-# ======================================================================
 
 set -euo pipefail
 

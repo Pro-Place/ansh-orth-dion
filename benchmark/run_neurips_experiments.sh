@@ -1,9 +1,5 @@
 #!/bin/bash
-# ======================================================================
 # NeurIPS experiments on 4x A40
-# Phase 1: CIFAR-100 WideResNet scaling (WRN-28-2/4/10 x 4 optimizers)
-# Phase 2: DDP timing on WRN-28-10 (4-GPU wall-clock)
-# ======================================================================
 set -euo pipefail
 cd /workspace/adadion-cifar/benchmark
 

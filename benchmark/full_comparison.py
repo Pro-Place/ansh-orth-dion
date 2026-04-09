@@ -27,9 +27,7 @@ import torchvision
 import torchvision.transforms as T
 
 
-# =========================================================================
 # Models
-# =========================================================================
 
 class ResNet18CIFAR(nn.Module):
     """ResNet-18 adapted for 32x32 CIFAR images."""
@@ -60,9 +58,7 @@ class SimpleMLP(nn.Module):
         return self.fc3(x)
 
 
-# =========================================================================
 # Data
-# =========================================================================
 
 def get_cifar10(batch_size=128, num_workers=2):
     transform_train = T.Compose([
@@ -93,9 +89,7 @@ def get_fashionmnist(batch_size=256, num_workers=2):
     return train_loader, test_loader
 
 
-# =========================================================================
 # Optimizer factory
-# =========================================================================
 
 def _group_params(model):
     """Split params into matrix (2D) and scalar (1D/other)."""
@@ -315,9 +309,7 @@ def _create_muon_fallback(model, lr, wd, matrix_params, scalar_params):
     return opt, comm_fn
 
 
-# =========================================================================
 # Training
-# =========================================================================
 
 @torch.no_grad()
 def evaluate(model, loader, device):
@@ -477,9 +469,7 @@ def run_experiment(
     return result
 
 
-# =========================================================================
 # Main
-# =========================================================================
 
 def main():
     parser = argparse.ArgumentParser()

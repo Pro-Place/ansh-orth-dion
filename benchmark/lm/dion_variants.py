@@ -24,9 +24,7 @@ from torch import Tensor
 from torch.optim import Optimizer
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 def _col_norm(W: Tensor, eps: float = 1e-8) -> Tensor:
     """Normalize each column of W to unit length."""
@@ -53,9 +51,7 @@ def _effective_rank(sigma: Tensor, eps: float = 1e-12) -> float:
     return H.exp().item()
 
 
-# ---------------------------------------------------------------------------
 # Base class
-# ---------------------------------------------------------------------------
 
 class DionBase(Optimizer):
     """
@@ -94,9 +90,7 @@ class DionBase(Optimizer):
         """Return diagnostics from the most recent step() call."""
         return self._step_diagnostics
 
-    # ------------------------------------------------------------------
     # Subclass hooks
-    # ------------------------------------------------------------------
 
     def _normalize_right(self, W: Tensor, state: dict) -> Tensor:
         """Produce V_bar from W = M^T @ U.  Override in subclasses."""
@@ -121,9 +115,7 @@ class DionBase(Optimizer):
         """Return beta for this step.  Override for adaptive variants."""
         return group["beta"]
 
-    # ------------------------------------------------------------------
     # Core step
-    # ------------------------------------------------------------------
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -238,9 +230,7 @@ class DionBase(Optimizer):
         self._step_diagnostics = all_diag
         return loss
 
-    # ------------------------------------------------------------------
     # Diagnostic collection
-    # ------------------------------------------------------------------
 
     def _collect_diagnostics(
         self,
@@ -412,9 +402,7 @@ class DionBase(Optimizer):
         return diag
 
 
-# ---------------------------------------------------------------------------
 # 1. Stripped Dion (ColNorm, configurable beta)
-# ---------------------------------------------------------------------------
 
 class StrippedDion(DionBase):
     """
@@ -436,9 +424,7 @@ class StrippedDion(DionBase):
         return _col_norm(W)
 
 
-# ---------------------------------------------------------------------------
 # 2. Orth-Dion (QR right factor, nu_t = 1)
-# ---------------------------------------------------------------------------
 
 class OrthDion(DionBase):
     """
@@ -460,9 +446,7 @@ class OrthDion(DionBase):
         return _orth(W)
 
 
-# ---------------------------------------------------------------------------
 # 3. Soft-Isometry AdaDion (diagonal S_t in [0,1], QR right factor)
-# ---------------------------------------------------------------------------
 
 class SoftIsometryDion(DionBase):
     """
@@ -533,9 +517,7 @@ class SoftIsometryDion(DionBase):
         return (U * s.unsqueeze(0)) @ V_bar.t()
 
 
-# ---------------------------------------------------------------------------
 # 4. Modewise-Beta Dion (per-mode b_i feedback)
-# ---------------------------------------------------------------------------
 
 class ModewiseBetaDion(DionBase):
     """
@@ -641,9 +623,7 @@ class ModewiseBetaDion(DionBase):
         return M - beta * (U @ UtM)
 
 
-# ---------------------------------------------------------------------------
 # 5. PA-Dion (Persistence-Aware adaptive beta)
-# ---------------------------------------------------------------------------
 
 class PADion(DionBase):
     """
@@ -683,9 +663,7 @@ class PADion(DionBase):
         return beta
 
 
-# ---------------------------------------------------------------------------
 # 6. RNormDion (R_norm targeting controller)
-# ---------------------------------------------------------------------------
 
 class RNormDion(DionBase):
     """
@@ -723,9 +701,7 @@ class RNormDion(DionBase):
         return max(self.beta_min, min(self.beta_max, beta))
 
 
-# ---------------------------------------------------------------------------
 # 7. ReEntryDion (targets ReEntryNorm instead of R_norm)
-# ---------------------------------------------------------------------------
 
 class ReEntryDion(DionBase):
     """
@@ -782,9 +758,7 @@ class ReEntryDion(DionBase):
         return max(self.beta_min, min(self.beta_max, beta))
 
 
-# ---------------------------------------------------------------------------
 # 8. PolyakDion (explicit momentum, no error feedback)
-# ---------------------------------------------------------------------------
 
 class PolyakDion(DionBase):
     """
@@ -814,9 +788,7 @@ class PolyakDion(DionBase):
         return torch.zeros_like(M)
 
 
-# ---------------------------------------------------------------------------
 # Factory
-# ---------------------------------------------------------------------------
 
 VARIANT_REGISTRY = {
     "stripped_dion": StrippedDion,

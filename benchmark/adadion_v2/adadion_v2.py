@@ -802,9 +802,7 @@ class AdaDionV2(Optimizer):
                 "Data parallel mesh must be either a DeviceMesh or ProcessGroup."
             )
 
-    # ------------------------------------------------------------------
     # Diagnostic methods (called by BaseHybridOptimizersContainer)
-    # ------------------------------------------------------------------
 
     def get_rank(self) -> dict:
         if not self._adaptive_rank:

@@ -48,9 +48,7 @@ def make_base(model="resnet18", epochs=100, seed=42, grad_clip=1.0):
     )
 
 
-# ================================================================
 # Best configs from ablation
-# ================================================================
 
 def best_adamw():
     return AdamWConfig(lr=1e-3, weight_decay=0.05, betas=(0.9, 0.999), eps=1e-8)
@@ -143,9 +141,7 @@ def run_final_benchmark(output_dir: str):
     os.makedirs(output_dir, exist_ok=True)
     all_results = []
 
-    # ================================================================
     # PART 1: ResNet-18, 3 seeds, all 5 optimizers
-    # ================================================================
     logger.info("\n" + "#"*70 + "\n  PART 1: ResNet-18 Final Benchmark (100ep, 3 seeds)\n" + "#"*70)
 
     opt_factories = {
@@ -161,9 +157,7 @@ def run_final_benchmark(output_dir: str):
             name = f"resnet18_{opt_name}_seed{seed}"
             run_and_record(all_results, name, make_base(seed=seed), opt_factory(), output_dir)
 
-    # ================================================================
     # PART 2: ViT-Small LR sweep for AdaDion, then comparison
-    # ================================================================
     logger.info("\n" + "#"*70 + "\n  PART 2: ViT-Small Benchmark\n" + "#"*70)
 
     # AdaDion LR sweep on ViT
@@ -201,9 +195,7 @@ def run_final_benchmark(output_dir: str):
         name = f"vit_{opt_name}_final"
         run_and_record(all_results, name, make_base(model="vit_small"), opt_factory(), output_dir)
 
-    # ================================================================
     # FINAL SUMMARY TABLE
-    # ================================================================
     print("\n" + "="*100)
     print(f"{'Run':<40} {'Optimizer':<12} {'Model':<12} {'Val Acc':>10} {'Val Loss':>10} {'Time':>8}")
     print("="*100)

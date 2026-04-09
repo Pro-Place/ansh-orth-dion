@@ -1,12 +1,5 @@
 #!/bin/bash
-# ======================================================================
 # RunPod Environment Setup for CIFAR-10 Optimizer Benchmark
-#
-# Recommended pod: 1x A100 (40GB) or 1x A6000 (48GB)
-# PyTorch template: RunPod PyTorch 2.4+ with CUDA 12.x
-#
-# Usage: bash setup_runpod.sh
-# ======================================================================
 
 set -euo pipefail
 

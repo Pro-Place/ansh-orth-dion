@@ -37,9 +37,7 @@ from benchmark.lm.configs import (
 )
 
 
-# ---------------------------------------------------------------------------
 # Optimizer setup
-# ---------------------------------------------------------------------------
 
 def create_optimizer_for_experiment(
     model: SmallGPT2, opt_cfg: OptimizerConfig, train_cfg: TrainConfig
@@ -114,9 +112,7 @@ def create_optimizer_for_experiment(
     return dion_opt, adamw_opt
 
 
-# ---------------------------------------------------------------------------
 # Learning rate schedule
-# ---------------------------------------------------------------------------
 
 def get_lr(step: int, cfg: TrainConfig) -> float:
     """Cosine schedule with linear warmup."""
@@ -142,9 +138,7 @@ def set_lr(optimizers: list, lr: float, scalar_lr: Optional[float] = None):
                 group["lr"] = lr
 
 
-# ---------------------------------------------------------------------------
 # Evaluation
-# ---------------------------------------------------------------------------
 
 @torch.no_grad()
 def evaluate(model: SmallGPT2, val_loader, device: str, max_batches: int = 50) -> dict:
@@ -170,9 +164,7 @@ def evaluate(model: SmallGPT2, val_loader, device: str, max_batches: int = 50) -
     }
 
 
-# ---------------------------------------------------------------------------
 # Main training loop
-# ---------------------------------------------------------------------------
 
 def train_experiment(cfg: ExperimentConfig) -> dict:
     """Run a single experiment and return results."""
@@ -392,9 +384,7 @@ def train_experiment(cfg: ExperimentConfig) -> dict:
     return results
 
 
-# ---------------------------------------------------------------------------
 # Local response-surface experiment (MY_RESPONSE §experiment 3)
-# ---------------------------------------------------------------------------
 
 def response_surface_experiment(
     checkpoint_path: str,
@@ -503,9 +493,7 @@ def response_surface_experiment(
     return results
 
 
-# ---------------------------------------------------------------------------
 # Diagnostic aggregation
-# ---------------------------------------------------------------------------
 
 def _aggregate_diagnostics(diag: Dict[str, Dict], step: int) -> dict:
     """Aggregate per-param diagnostics into summary statistics."""
@@ -525,9 +513,7 @@ def _aggregate_diagnostics(diag: Dict[str, Dict], step: int) -> dict:
     return agg
 
 
-# ---------------------------------------------------------------------------
 # CLI
-# ---------------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Dion variants LM experiment")

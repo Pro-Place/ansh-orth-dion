@@ -29,9 +29,7 @@ from torch import Tensor
 from torch.optim import Optimizer
 
 
-# =========================================================================
 # Core operations
-# =========================================================================
 
 def _orth(W: Tensor) -> Tensor:
     """QR orthogonalization — returns Q with orthonormal columns."""
@@ -93,9 +91,7 @@ def _effective_rank(sigma: Tensor, eps: float = 1e-12) -> float:
     return H.exp().item()
 
 
-# =========================================================================
 # Ada-Dion V3 Optimizer
-# =========================================================================
 
 class AdaDionV3(Optimizer):
     """
@@ -227,19 +223,15 @@ class AdaDionV3(Optimizer):
 
                 G = p.grad
 
-                # -------------------------------------------------------
                 # Non-spectral params: internal AdamW
                 # Applies to: 1D params (norms, biases), embeddings
                 # (very tall/wide matrices where spectral update is wrong),
                 # and any matrix smaller than the rank.
-                # -------------------------------------------------------
                 if G.ndim != 2 or min(G.shape) < rank_default or max(G.shape) > 16 * min(G.shape):
                     self._adamw_step(p, G, group)
                     continue
 
-                # -------------------------------------------------------
                 # 2D matrix params: Dion V3 spectral update
-                # -------------------------------------------------------
                 m, n = G.shape
                 state = self.state[p]
 

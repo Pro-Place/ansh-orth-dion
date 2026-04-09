@@ -77,9 +77,7 @@ class ExperimentConfig:
     output_dir: str = "results"
 
 
-# =========================================================================
 # Pre-defined experiment suites
-# =========================================================================
 
 def _base_config(name: str, **opt_kwargs) -> ExperimentConfig:
     """Create a base config with default settings."""
@@ -229,9 +227,7 @@ for r in [16, 32, 64, 128, 256]:
         )
 
 
-# =========================================================================
 # Experiment suites (groups of experiments to run together)
-# =========================================================================
 
 EXPERIMENT_SUITES = {
     # Core beta sweep reproduction

@@ -63,9 +63,7 @@ def run_diagnostics(
     print(f"{len(param_info)} matrix params")
     print(f"Shapes: {set(pi['shape'] for pi in param_info)}")
 
-    # ================================================================
     # Run both methods side-by-side using manual optimizer logic
-    # ================================================================
     methods = {
         # === Baselines ===
         "dion_beta1":  {"beta": 1.0, "right_factor": "colnorm", "per_mode": False, "lr_scale_mode": "dion"},
@@ -279,9 +277,7 @@ def run_diagnostics(
         json.dump(all_logs, f, indent=2)
     print(f"\nSaved to {outfile}")
 
-    # ================================================================
     # Analysis
-    # ================================================================
     print(f"\n{'='*80}")
     print("DIAGNOSTIC ANALYSIS")
     print(f"{'='*80}")

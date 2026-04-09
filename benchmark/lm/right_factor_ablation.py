@@ -44,9 +44,7 @@ from benchmark.lm.train import create_optimizer_for_experiment, get_lr, evaluate
 from benchmark.lm.configs import ModelConfig, TrainConfig, OptimizerConfig, ExperimentConfig
 
 
-# =========================================================================
 # New normalization methods for investigation
-# =========================================================================
 
 def _block_qr(W: torch.Tensor, block_size: int = 8) -> torch.Tensor:
     """QR within blocks, independent across blocks.
@@ -103,9 +101,7 @@ def _svd_right_factor(M: torch.Tensor, r: int) -> Tuple[torch.Tensor, torch.Tens
     return U[:, :r], Vh[:r, :].t()
 
 
-# =========================================================================
 # Modified Dion with pluggable normalization
-# =========================================================================
 
 class InvestigationDion(DionBase):
     """Dion with configurable right-factor normalization for investigation."""
@@ -204,9 +200,7 @@ class InvestigationDion(DionBase):
         return diag
 
 
-# =========================================================================
 # Experiment runner
-# =========================================================================
 
 def run_investigation(
     name: str,
@@ -413,9 +407,7 @@ def run_investigation(
     return results
 
 
-# =========================================================================
 # Full investigation suite
-# =========================================================================
 
 INVESTIGATIONS = {
     # --- A. Rank sweep: find the crossover ---

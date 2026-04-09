@@ -38,9 +38,7 @@ from benchmark.adadion_v2_single import AdaDionV2Single
 from benchmark.lm.dion_variants import StrippedDion
 
 
-# =========================================================================
 # Optimizer factory
-# =========================================================================
 
 def create_optimizer(name: str, model: nn.Module, lr: float, rank: int = 64,
                      weight_decay: float = 0.1) -> Tuple:
@@ -202,9 +200,7 @@ def create_optimizer(name: str, model: nn.Module, lr: float, rank: int = 64,
     raise ValueError(f"Unknown optimizer: {name}")
 
 
-# =========================================================================
 # LR schedule
-# =========================================================================
 
 def get_lr(step: int, max_steps: int, peak_lr: float, warmup: int = 2000) -> float:
     min_lr = peak_lr * 0.1
@@ -214,9 +210,7 @@ def get_lr(step: int, max_steps: int, peak_lr: float, warmup: int = 2000) -> flo
     return min_lr + (peak_lr - min_lr) * 0.5 * (1 + math.cos(math.pi * progress))
 
 
-# =========================================================================
 # Training
-# =========================================================================
 
 @torch.no_grad()
 def evaluate(model, val_loader, device, max_batches=50):
@@ -368,9 +362,7 @@ def run_training(
     return result
 
 
-# =========================================================================
 # HP sweep
-# =========================================================================
 
 # LR grids per optimizer
 LR_GRIDS = {
@@ -425,9 +417,7 @@ def run_hp_sweep(opt_name: str, sweep_steps: int = 3000, device: str = "cuda",
     return best_lr, results
 
 
-# =========================================================================
 # Main
-# =========================================================================
 
 def main():
     parser = argparse.ArgumentParser()
@@ -471,7 +461,6 @@ def main():
                              device=args.device, output_dir=args.output_dir, tag="best")
 
     elif args.mode == "full":
-        # Phase 1: HP sweep (short runs)
         sweep_steps = args.max_steps or 3000
         best_lrs = {}
         for opt_name in opts:
@@ -486,7 +475,6 @@ def main():
             json.dump(best_lrs, f, indent=2)
         print(f"\nBest LRs: {best_lrs}")
 
-        # Phase 2: Full runs with best LRs
         full_steps = 15000
         all_results = {}
         for opt_name in opts:
